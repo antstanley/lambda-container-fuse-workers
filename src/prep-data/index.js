@@ -1,14 +1,26 @@
 import processCSV from './processCSV.js.js'
 import chunkFiles from './chunkFiles.js.js'
-import { join } from 'path'
+import { join, basename } from 'path'
+
+const processCSVArray = async (csvPaths, indexes) => {
+  return Promise.all(csvPaths.map(async (csvPath) => {
+    const source = basename(csvPath)
+    return processCSV(
+      join(process.cwd(), csvPath),
+      indexes,
+      source
+    )
+  }))
+
+}
 
 const prep = async options => {
   if (options.inputFile) {
     if (options.searchFile) {
       if (options.indexes) {
         console.time('Process CSV')
-        const prepData = await processCSV(
-          join(process.cwd(), options.inputFile),
+        const prepData = Array.isArray(options.inputFile) ? processCSVArray(options.inputFile, options.indexes) : await processCSV(
+          join(process.cwd(), options.inputFile, false),
           options.indexes
         )
         console.timeEnd('Process CSV')
@@ -48,4 +60,33 @@ const prep = async options => {
   }
 }
 
-export default prep
+const prepOptions = {
+  inputFile: ["./data/ct.csv", "./data/ma.csv", "./data/me.csv", "./data/nh.csv", "./data/nj.csv", "./data/ny.csv", "./data/pa.csv", "./data/ri.csv", "./data/ri.csv"],
+  searchFile: "./src/lambda-fuse/data/ne_address.json",
+  chunks: 4,
+  results: 10,
+  searchOptions: {
+    threshold: 0.5,
+    maxPatternLength: 64,
+    keys: ["name", "address"]
+  },
+  indexes: {
+    addressIdx: {
+      compoundKeys: ["Address"],
+      keys: ["addressIdx", "number", "street", "unit", "city", "source", "postcode"],
+      fields: {
+        ID: "Address ID",
+        NUMBER: "Property Number",
+        STREET: "Street",
+        UNIT: "Unit",
+        CITY: "City",
+        source: "State",
+        POSTCODE: "Postcode",
+        LON: "Longitude",
+        LAT: "Latitude"
+      }
+    }
+  }
+}
+
+prep(prepOptions)

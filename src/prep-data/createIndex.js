@@ -7,8 +7,14 @@ const cleanString = str => {
     )
 }
 
-const createIndex = (indexName, data, index) => {
+const createIndex = (indexName, data, index, source) => {
   const { compoundKeys, fields } = index
+
+  if (source) {
+    if (!data.source) {
+      data['source'] = source
+    }
+  }
 
   const compoundIndex = compoundKeys
     .map(key => {

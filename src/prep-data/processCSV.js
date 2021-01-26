@@ -4,7 +4,7 @@ import neatCsv from 'neat-csv'
 import createIndex from './createIndex.js'
 import sortIndex from './sortIndex.js'
 
-const processCSV = async (inputFile, indexes) => {
+const processCSV = async (inputFile, indexes, source) => {
   try {
     const csvFile = readFileSync(inputFile, 'utf-8')
     const csvJson = await neatCsv(csvFile)
@@ -13,7 +13,7 @@ const processCSV = async (inputFile, indexes) => {
       if (indexes.hasOwnProperty(index)) {
         indexData[index] = []
         for (let i = 0; i < csvJson.length; i++) {
-          indexData[index].push(createIndex(index, csvJson[i], indexes[index]))
+          indexData[index].push(createIndex(index, csvJson[i], indexes[index], source))
         }
         indexData[index] = sortIndex(indexData[index], index)
       }

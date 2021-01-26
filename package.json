@@ -8,6 +8,7 @@
   "license": "MIT",
   "dependencies": {},
   "scripts": {
+    "prep":"node src/prep-data/index.js",
     "test": "mocha tests/unit/"
   },
   "devDependencies": {
