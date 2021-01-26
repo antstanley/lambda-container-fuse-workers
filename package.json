@@ -1,0 +1,17 @@
+{
+  "name": "hello_world",
+  "version": "0.0.1",
+  "description": "hello world sample for NodeJS",
+  "main": "src/lambda-fuse/index.js",
+  "repository": "https://github.com/antstanley/lambda-container-fuse-workers",
+  "author": "Ant Stanley",
+  "license": "MIT",
+  "dependencies": {},
+  "scripts": {
+    "test": "mocha tests/unit/"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1"
+  }
+}
