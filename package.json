@@ -7,10 +7,11 @@
   "author": "Ant Stanley",
   "license": "MIT",
   "dependencies": {
-    "neat-csv": "^6.0.1"
+    "csv-parser": "^3.0.0"
   },
   "scripts": {
     "prep": "node src/prep-data/index.js",
+    "prep-highmem": "node --max-old-space-size=6144 src/prep-data/index.js",
     "test": "mocha tests/unit/"
   },
   "type": "module",

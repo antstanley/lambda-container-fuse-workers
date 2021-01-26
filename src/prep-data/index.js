@@ -11,7 +11,6 @@ const processCSVArray = async (csvPaths, indexes) => {
       source
     )
   }))
-
 }
 
 const prep = async options => {
@@ -19,7 +18,7 @@ const prep = async options => {
     if (options.searchFile) {
       if (options.indexes) {
         console.time('Process CSV')
-        const prepData = Array.isArray(options.inputFile) ? processCSVArray(options.inputFile, options.indexes) : await processCSV(
+        const prepData = Array.isArray(options.inputFile) ? await processCSVArray(options.inputFile, options.indexes) : await processCSV(
           join(process.cwd(), options.inputFile, false),
           options.indexes
         )
