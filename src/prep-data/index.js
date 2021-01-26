@@ -1,5 +1,5 @@
-import processCSV from './processCSV.js.js'
-import chunkFiles from './chunkFiles.js.js'
+import processCSV from './processCSV.js'
+import chunkFiles from './chunkFiles.js'
 import { join, basename } from 'path'
 
 const processCSVArray = async (csvPaths, indexes) => {

@@ -6,11 +6,14 @@
   "repository": "https://github.com/antstanley/lambda-container-fuse-workers",
   "author": "Ant Stanley",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "neat-csv": "^6.0.1"
+  },
   "scripts": {
-    "prep":"node src/prep-data/index.js",
+    "prep": "node src/prep-data/index.js",
     "test": "mocha tests/unit/"
   },
+  "type": "module",
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^8.2.1"
