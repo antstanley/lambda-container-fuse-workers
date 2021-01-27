@@ -11,6 +11,7 @@
     "csv-parser": "^3.0.0"
   },
   "scripts": {
+    "docker-build": "cd src/lambda-fuse/ && docker build -t lambda-fuse .",
     "prep": "node src/prep-data/index.js",
     "prep-highmem": "node --max-old-space-size=8192 src/prep-data/index.js",
     "test": "mocha tests/unit/"
