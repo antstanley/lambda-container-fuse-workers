@@ -1,4 +1,4 @@
-const search = require('./search.js')
+import search from './search.js'
 
 const searchOptions = {
   searchFile: {
@@ -68,4 +68,4 @@ const requestHandler = async (event) => {
   return response
 }
 
-module.exports = requestHandler
+export default requestHandler

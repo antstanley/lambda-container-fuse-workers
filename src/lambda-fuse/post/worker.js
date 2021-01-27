@@ -1,7 +1,5 @@
-const Fuse = require('fuse.js')
-const workerThreads = require('worker_threads')
-
-const { parentPort, workerData, isMainThread } = workerThreads
+import Fuse from 'fuse.js'
+import { parentPort, workerData, isMainThread } from 'worker_threads'
 
 const fuseSearch = ({ cleanSearch, searchData, options }) => {
   const fuse = new Fuse(searchData, options)

@@ -1,8 +1,6 @@
-const loadData = require('./loadData.js')
-const handleWorkers = require('./handleWorkers.js')
-const path = require('path')
+import loadData from './loadData.js'
 
-const { join } = path
+import handleWorkers from './handleWorkers.js'
 
 const cleanString = str => {
   return str
@@ -46,8 +44,7 @@ const search = async (
       options = Object.assign({}, defaultOptions, searchOptions)
     }
 
-    // const workerScript = new URL('./worker.js', import.meta.url)
-    const workerScript = join(__dirname, './worker.js')
+    const workerScript = new URL('./worker.js', import.meta.url)
     const cleanSearch = cleanString(searchTerm)
 
     for (const index in indexes) {
@@ -71,4 +68,5 @@ const search = async (
   }
   return searchResponse
 }
-module.exports = search
+
+export default search

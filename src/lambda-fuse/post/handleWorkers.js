@@ -1,6 +1,4 @@
-const workerThreads = require('worker_threads')
-
-const { Worker } = workerThreads
+import { Worker } from 'worker_threads'
 
 const handleWorkers = (
   cleanSearch,
@@ -74,4 +72,4 @@ const handleWorkers = (
   })
 }
 
-module.exports = handleWorkers
+export default handleWorkers
