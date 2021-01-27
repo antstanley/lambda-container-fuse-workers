@@ -1,7 +1,7 @@
 {
-  "name": "hello_world",
+  "name": "lambda-container-fuse-workers",
   "version": "0.0.1",
-  "description": "hello world sample for NodeJS",
+  "description": "Implementing Fuzzy searching using Fuse.js in a container in AWS Lambda",
   "main": "src/lambda-fuse/index.js",
   "repository": "https://github.com/antstanley/lambda-container-fuse-workers",
   "author": "Ant Stanley",
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "prep": "node src/prep-data/index.js",
-    "prep-highmem": "node --max-old-space-size=6144 src/prep-data/index.js",
+    "prep-highmem": "node --max-old-space-size=8192 src/prep-data/index.js",
     "test": "mocha tests/unit/"
   },
   "type": "module",

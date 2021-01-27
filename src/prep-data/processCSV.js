@@ -4,8 +4,6 @@ import csv from 'csv-parser'
 import createIndex from './createIndex.js'
 import sortIndex from './sortIndex.js'
 
-
-
 const streamCSV = (inputfile) => {
   let csvJson = []
   return new Promise((resolve, reject) => {
@@ -21,9 +19,9 @@ const streamCSV = (inputfile) => {
 
 const processCSV = async (inputFile, indexes, source) => {
   try {
-
     const csvJson = await streamCSV(inputFile)
     const indexData = {}
+    let indexArrayCount = 0
     for (const index in indexes) {
       if (indexes.hasOwnProperty(index)) {
         indexData[index] = []
@@ -31,15 +29,20 @@ const processCSV = async (inputFile, indexes, source) => {
           indexData[index].push(createIndex(index, csvJson[i], indexes[index], source))
         }
         indexData[index] = sortIndex(indexData[index], index)
+        indexArrayCount++
       }
     }
 
-    console.log(`Rows processed: ${csvJson.length}`)
-
-    return {
-      data: indexData,
-      records: csvJson.length
+    if (source) {
+      console.log(`${source} - Rows processed: ${csvJson.length}`)
+    } else {
+      console.log(`Rows processed: ${csvJson.length}`)
     }
+    console.log(`Indexes created: ${indexArrayCount}`)
+
+    console.log(process.memoryUsage())
+
+    return indexData
   } catch (error) {
     console.log(error)
     return false

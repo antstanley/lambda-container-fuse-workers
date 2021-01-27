@@ -15,7 +15,7 @@ const chunkFiles = (fileName, sortedData, chunks, records) => {
         }
       }
       console.log(`chunk: ${i}\nrecords:${counter}`)
-      writeFileSync(`${fileName}.chunk${i}`, JSON.stringify(dataChunk), 'utf8')
+      writeFileSync(`${fileName}.chunk${i}.json`, JSON.stringify(dataChunk), 'utf8')
     }
 
     return {

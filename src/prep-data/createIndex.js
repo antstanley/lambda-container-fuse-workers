@@ -15,7 +15,6 @@ const createIndex = (indexName, data, index, source) => {
       data['source'] = source
     }
   }
-
   const compoundIndex = compoundKeys
     .map(key => {
       return data[key]
@@ -30,7 +29,6 @@ const createIndex = (indexName, data, index, source) => {
       fieldMap[field] = data[fields[field]]
     }
   }
-
   return fieldMap
 }
 

@@ -1,17 +1,7 @@
 import processCSV from './processCSV.js'
+import processCSVArray from './processCSVArray.js'
 import chunkFiles from './chunkFiles.js'
-import { join, basename } from 'path'
-
-const processCSVArray = async (csvPaths, indexes) => {
-  return Promise.all(csvPaths.map(async (csvPath) => {
-    const source = basename(csvPath)
-    return processCSV(
-      join(process.cwd(), csvPath),
-      indexes,
-      source
-    )
-  }))
-}
+import { join, dirname, basename } from 'path'
 
 const prep = async options => {
   if (options.inputFile) {
@@ -19,23 +9,28 @@ const prep = async options => {
       if (options.indexes) {
         console.time('Process CSV')
         const prepData = Array.isArray(options.inputFile) ? await processCSVArray(options.inputFile, options.indexes) : await processCSV(
-          join(process.cwd(), options.inputFile, false),
+          join(process.cwd(), options.inputFile),
           options.indexes
         )
         console.timeEnd('Process CSV')
 
         if (prepData) {
-          const { data, records } = prepData
-          console.log(`Records processed: ${records}`)
+          for (const index in options.indexes) {
+            if (options.indexes.hasOwnProperty(index)) {
+              console.log(`Records processed for index ${index}: ${prepData[index].length}`)
+            }
+          }
           if (options.chunks) {
-            for (const index in data) {
-              if (data.hasOwnProperty(index)) {
+            for (const index in prepData) {
+              if (prepData.hasOwnProperty(index)) {
+                const { dir, namePrefix } = options.searchFile
                 console.log(`Processing index: ${index}`)
+                const chunkDest = join(process.cwd(), dir, `${namePrefix}-${index}`)
                 const chunkSort = chunkFiles(
-                  join(process.cwd(), options.searchFile),
-                  data[index],
+                  chunkDest,
+                  prepData[index],
                   options.chunks,
-                  records
+                  prepData[index].length
                 )
                 if (chunkSort) {
                   console.log(`${index} - Chunks created: ${chunkSort.chunks}`)
@@ -60,29 +55,33 @@ const prep = async options => {
 }
 
 const prepOptions = {
-  inputFile: ["./data/ct.csv", "./data/ma.csv", "./data/me.csv", "./data/nh.csv", "./data/nj.csv", "./data/ny.csv", "./data/pa.csv", "./data/ri.csv", "./data/ri.csv"],
-  searchFile: "./src/lambda-fuse/data/ne_address.json",
-  chunks: 4,
-  results: 10,
+  //  inputFile: ["./data/ct.csv", "./data/ma.csv", "./data/me.csv", "./data/nh.csv", "./data/nj.csv", "./data/ny.csv", "./data/pa.csv", "./data/ri.csv", "./data/vt.csv"],
+  inputFile: "./data/test.csv",
+  searchFile: {
+    dir: "./src/lambda-fuse/data/",
+    namePrefix: "ne-address"
+  },
+  chunks: 6,
+  results: 20,
   searchOptions: {
     threshold: 0.5,
     maxPatternLength: 64,
-    keys: ["name", "address"]
+    keys: ["address"]
   },
   indexes: {
     addressIdx: {
-      compoundKeys: ["Address"],
-      keys: ["addressIdx", "number", "street", "unit", "city", "source", "postcode"],
+      compoundKeys: ["NUMBER", "STREET", "UNIT", "CITY", "source", "POSTCODE"],
+      keys: ["addressIdx", "NUMBER", "STREET", "UNIT", "CITY", "source", "POSTCODE"],
       fields: {
-        ID: "Address ID",
-        NUMBER: "Property Number",
-        STREET: "Street",
-        UNIT: "Unit",
-        CITY: "City",
-        source: "State",
-        POSTCODE: "Postcode",
-        LON: "Longitude",
-        LAT: "Latitude"
+        id: "HASH",
+        number: "NUMBER",
+        street: "STREET",
+        unit: "UNIT",
+        city: "CITY",
+        state: "source",
+        zipcode: "POSTCODE",
+        lon: "LON",
+        lat: "LAT"
       }
     }
   }
