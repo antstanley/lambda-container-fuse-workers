@@ -1,8 +1,7 @@
 {
-    "dependencies": {
-        "JSONStream": "^1.3.5",
-        "fuse.js": "^6.4.6"
-    },
-    "type": "module",
-    "main": "index.js"
+  "dependencies": {
+    "JSONStream": "^1.3.5",
+    "fuse.js": "^6.4.6"
+  },
+  "main": "index.js"
 }

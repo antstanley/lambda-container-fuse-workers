@@ -1,6 +1,10 @@
-import { join } from 'path'
-import { createReadStream } from 'fs'
-import * as JSONStream from 'JSONStream'
+const path = require('path')
+const fs = require('fs')
+const JSONStream = require('JSONStream')
+
+const { join } = path
+const { createReadStream } = fs
+
 
 const loadData = (searchFile, chunks, indexes) => {
   // prep datachunks object
@@ -47,5 +51,4 @@ const loadData = (searchFile, chunks, indexes) => {
     }
   })
 }
-
-export default loadData
+module.exports = loadData
