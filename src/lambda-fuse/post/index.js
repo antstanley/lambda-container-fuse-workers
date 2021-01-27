@@ -1,8 +1,8 @@
-import search from './search.js'
+const search = require('./search.js')
 
 const searchOptions = {
   searchFile: {
-    dir: "./src/lambda-fuse/data/",
+    dir: "./data/",
     namePrefix: "ne-address"
   },
   chunks: 6,
@@ -55,7 +55,7 @@ const requestHandler = async (event) => {
     } else {
       response = {
         statusCode: 500,
-        body: `Failed with error ${error}`
+        body: `Failed with error ${searchResponse.error}`
       }
     }
   } catch (error) {
@@ -68,4 +68,4 @@ const requestHandler = async (event) => {
   return response
 }
 
-export default requestHandler
+module.exports = requestHandler

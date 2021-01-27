@@ -1,6 +1,6 @@
-import { join } from 'path'
-import { createReadStream } from 'fs'
-import * as JSONStream from 'JSONStream'
+const { join } = require('path')
+const { createReadStream } = require('fs')
+const JSONStream = require('JSONStream')
 
 const loadData = (searchFile, chunks, indexes) => {
   // prep datachunks object
@@ -27,7 +27,7 @@ const loadData = (searchFile, chunks, indexes) => {
     for (let i = 0; i < chunks; i++) {
       for (const index in indexes) {
         if (indexes.hasOwnProperty(index)) {
-          const chunkFile = join(process.cwd(), dir, `${namePrefix}-${index}.chunk${i}.json`)
+          const chunkFile = join(__dirname, dir, `${namePrefix}-${index}.chunk${i}.json`)
           createReadStream(chunkFile)
             .pipe(JSONStream.parse('*'))
             .on('data', data => {
@@ -48,4 +48,4 @@ const loadData = (searchFile, chunks, indexes) => {
   })
 }
 
-export default loadData
+module.exports = loadData

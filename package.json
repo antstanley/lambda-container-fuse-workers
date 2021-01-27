@@ -11,14 +11,19 @@
     "csv-parser": "^3.0.0"
   },
   "scripts": {
-    "docker-build": "cd src/lambda-fuse/ && docker build -t lambda-fuse .",
+    "docker-build": "cd dist/lambda-fuse/ && docker build -t lambda-fuse .",
     "prep": "node src/prep-data/index.js",
     "prep-highmem": "node --max-old-space-size=8192 src/prep-data/index.js",
-    "test": "mocha tests/unit/"
+    "test": "mocha tests/unit/",
+    "bundle:prep": "rm -rf dist && mkdir dist && cd dist && mkdir lambda-fuse",
+    "bundle:copy": "cp src/lambda-fuse/package.json dist/lambda-fuse/package.json && cp src/lambda-fuse/Dockerfile dist/lambda-fuse/Dockerfile && cp -r src/lambda-fuse/data/ dist/lambda-fuse/ && cp src/lambda-fuse/post/worker.js dist/lambda-fuse/worker.js",
+    "bundle:js": "esbuild src/lambda-fuse/index.js --bundle --platform=node --outfile=dist/lambda-fuse/index.js",
+    "bundle": "npm run bundle:prep && npm run bundle:copy && npm run bundle:js"
   },
   "type": "module",
   "devDependencies": {
     "chai": "^4.2.0",
+    "esbuild": "^0.8.36",
     "mocha": "^8.2.1"
   }
 }

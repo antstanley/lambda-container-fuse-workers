@@ -1,7 +1,7 @@
 
 const getResponse = async (event) => {
 
-    const styles = `
+  const styles = `
         <style>
             .w-100 {
                 width: 100%;
@@ -20,7 +20,7 @@ const getResponse = async (event) => {
         </style>
     `
 
-    const searchForm = `
+  const searchForm = `
         <div class="form-container">
             <form id="searchForm">
                 <div>
@@ -34,9 +34,9 @@ const getResponse = async (event) => {
         </div>
     `
 
-    const searchResults = ``
+  const searchResults = ``
 
-    const html = `
+  const html = `
     <html>
         <head>
             ${styles}
@@ -49,16 +49,14 @@ const getResponse = async (event) => {
     </html>
     `
 
-    return {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'text/html'
-        },
-        body: html
-    }
-
-
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html'
+    },
+    body: html
+  }
 }
 
 
-export default getResponse
+module.exports = getResponse
