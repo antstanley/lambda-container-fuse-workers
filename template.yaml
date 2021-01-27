@@ -17,10 +17,169 @@ Resources:
           Properties:
             Path: /search
             Method: ANY
+      ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LambdaFuseFunctionRepository}:${SourceVersion}
+      MemorySize: 10240
+      Timeout: 30
+      Policies:
+        - AWSXrayWriteOnlyAccess
     Metadata:
-      DockerTag: nodejs12.x-v1
-      DockerContext: ./lambda-fuse
-      Dockerfile: Dockerfile
+      DockerTag: development
+      DockerContext: src/LambdaFuseFunction
+      Dockerfile: src/LambdaFuseFunction/Dockerfile
+    DependsOn:
+      - LambdaFuseFunctionBuildTrigger
+  LambdaFuseFunctionRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      ImageScanningConfiguration:
+        scanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |-
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire old images (keep a few for rollbacks)",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+  LambdaFuseFunctionImageBuilder:
+    Type: AWS::CodeBuild::Project
+    Metadata:
+      StackeryType: docker
+    Properties:
+      Name: !Sub ${AWS::StackName}-LambdaFuseFunction
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+      ServiceRole: !GetAtt LambdaFuseFunctionImageBuilderRole.Arn
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: !Sub
+          - |-
+            version: 0.2
+            phases:
+              install:
+                commands:
+                  - |
+                    _SOURCE_LOCATION="${SourceLocation}"
+                    if [ s3 != "${!_SOURCE_LOCATION%%:*}" ]; then
+                      git clone "${SourceLocation}" repo
+                      cd repo
+                      git checkout "${SourceVersion}"
+                    else
+                      aws s3 cp "${SourceLocation}" repo.tgz
+                      tar --strip-components 1 -xvvzf repo.tgz
+                    fi
+              pre_build:
+                commands:
+                  # https://docs.aws.amazon.com/AmazonECR/latest/userguide/Registries.html#registry_auth
+                  - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+              build:
+                commands:
+                  - docker build -f "${Dockerfile}" -t "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:${SourceVersion}" "${DockerContext}"
+              post_build:
+                commands:
+                  - if [ $CODEBUILD_BUILD_SUCCEEDING == 0 ]; then exit 1; fi
+                  - docker push "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:${SourceVersion}"
+          - ECRRepositoryName: !Ref LambdaFuseFunctionRepository
+            Dockerfile: src/LambdaFuseFunction/Dockerfile
+            DockerContext: src/LambdaFuseFunction
+      Tags:
+        - Key: Stackery Project Type
+          Value: Docker Image Builder
+  LambdaFuseFunctionImageBuilderEvents:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          build-status:
+            - SUCCEEDED
+            - FAILED
+            - FAULT
+            - STOPPPED
+            - TIMED_OUT
+          project-name:
+            - !Ref LambdaFuseFunctionImageBuilder
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+          Id: StackeryAgentCommander
+  LambdaFuseFunctionImageBuilderEventsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaFuseFunctionImageBuilderEvents.Arn
+  LambdaFuseFunctionImageBuilderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaFuseFunction
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}-LambdaFuseFunction:log-stream:*
+        - PolicyName: DownloadSourceFromStackeryAssetsBucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: arn:aws:s3:::stackery-assetsbucket-*/*
+        - PolicyName: UploadToECRDockerRepository
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !GetAtt LambdaFuseFunctionRepository.Arn
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+  LambdaFuseFunctionBuildTrigger:
+    Type: Custom::StackeryDockerImageBuildTrigger
+    DependsOn: LambdaFuseFunctionImageBuilderEventsPermission
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: docker
+      ProjectName: !Ref LambdaFuseFunctionImageBuilder
+      SourceVersion: !Ref SourceVersion
 Outputs:
   LambdaFuseApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World function
@@ -31,3 +190,10 @@ Outputs:
   LambdaFuseFunctionIamRole:
     Description: Implicit IAM Role created for Lambda Fuse function
     Value: !GetAtt LambdaFuseFunctionRole.Arn
+Parameters:
+  SourceLocation:
+    Type: String
+    Description: Location of source code for deployment (injected by Stackery at deployment time)
+  SourceVersion:
+    Type: String
+    Description: Source version for deployment (injected by Stackery at deployment time)
