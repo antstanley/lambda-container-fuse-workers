@@ -1,7 +1,10 @@
-import search from './post/search.js'
+import search from './search.js'
 
-const prepOptions = {
-  searchFile: "../data/ne_address.json",
+const searchOptions = {
+  searchFile: {
+    dir: "./src/lambda-fuse/data/",
+    namePrefix: "ne-address"
+  },
   chunks: 6,
   results: 20,
   searchOptions: {
@@ -10,15 +13,59 @@ const prepOptions = {
     keys: ["name", "address"]
   },
   indexes: {
-    nameIdx: {
-      compoundKeys: ["Restaurant Name"],
-      keys: ["nameIdx", "name", "address"],
+    addressIdx: {
+      compoundKeys: ["NUMBER", "STREET", "UNIT", "CITY", "source", "POSTCODE"],
+      keys: ["addressIdx", "NUMBER", "STREET", "UNIT", "CITY", "source", "POSTCODE"],
       fields: {
-        id: "Restaurant ID",
-        name: "Restaurant Name",
-        address: "Address",
-        rating: "Aggregate rating"
+        id: "HASH",
+        number: "NUMBER",
+        street: "STREET",
+        unit: "UNIT",
+        city: "CITY",
+        state: "source",
+        zipcode: "POSTCODE",
+        lon: "LON",
+        lat: "LAT"
       }
     }
   }
 }
+
+const requestHandler = async (event) => {
+  let response = {
+    statusCode: 500
+  }
+  try {
+
+
+    const body = JSON.parse(event.body)
+
+    const { searchTerm } = body
+
+    const searchResponse = await search(searchOptions, searchTerm)
+
+    if (!searchResponse.error) {
+      response = {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(searchResponse)
+      }
+    } else {
+      response = {
+        statusCode: 500,
+        body: `Failed with error ${error}`
+      }
+    }
+  } catch (error) {
+    console.error(error)
+    response = {
+      statusCode: 500,
+      body: `Failed with error ${error}`
+    }
+  }
+  return response
+}
+
+export default requestHandler

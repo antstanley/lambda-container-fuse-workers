@@ -1,5 +1,4 @@
-import { join } from 'path'
-import { readFileSync } from 'fs'
+import loadData from './loadData.js'
 
 import handleWorkers from './handleWorkers.js'
 
@@ -12,30 +11,20 @@ const cleanString = str => {
     )
 }
 
-const loadData = (searchFile, chunks) => {
-  const datachunks = []
-  for (let i = 0; i < chunks; i++) {
-    const chunkFile = `${searchFile}.chunk${i}`
-    datachunks.push(
-      JSON.parse(readFileSync(join(process.cwd(), chunkFile), 'utf8'))
-    )
-  }
-  return datachunks
-}
-
 let searchData
 
 const search = async (
   { searchFile, searchOptions, chunks, indexes, results = 10 },
   searchTerm
 ) => {
+  const searchResponse = {}
   try {
     if (!searchFile) {
       return 'Search file not specified'
     }
 
     if (!searchData) {
-      searchData = loadData(searchFile, chunks)
+      searchData = await loadData(searchFile, chunks, indexes)
     }
 
     let options = {}
@@ -57,8 +46,7 @@ const search = async (
 
     const workerScript = new URL('./worker.js', import.meta.url)
     const cleanSearch = cleanString(searchTerm)
-    const searchResponse = {}
-    // console.time('Search')
+
     for (const index in indexes) {
       if (indexes.hasOwnProperty(index)) {
         options.keys = indexes[index].keys
@@ -67,16 +55,16 @@ const search = async (
           searchData,
           options,
           chunks,
+          index,
           workerScript
         )
         searchResponse[index] = workerResponse.slice(0, results)
       }
-
-      // console.log(JSON.stringify(searchResponse, '', 2))
     }
-    // console.timeEnd('Search')
+
   } catch (error) {
     console.log(error)
+    searchResponse['error'] = error
   }
   return searchResponse
 }

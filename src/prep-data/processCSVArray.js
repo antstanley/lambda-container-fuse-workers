@@ -4,12 +4,11 @@ import { join, basename } from 'path'
 
 
 const processCSVArray = async (csvPaths, indexes) => {
+  // prep target argument to concatenant multiple indexes into one object per index
   let concatIndexData = {}
-  let recordCount = {}
   for (const index in indexes) {
     if (indexes.hasOwnProperty(index)) {
       concatIndexData[index] = []
-      recordCount[index] = 0
     }
   }
   console.log(`concatIndexData: ${JSON.stringify(concatIndexData, ' ', 2)}`)
@@ -28,11 +27,17 @@ const processCSVArray = async (csvPaths, indexes) => {
       for (const index in indexes) {
         if (indexes.hasOwnProperty(index)) {
           concatIndexData[index] = concatIndexData[index].concat(fileIndex[index])
-          recordCount[index] = concatIndexData[index].length
         }
       }
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  // sort the concatenated indexes
+  for (const index in indexes) {
+    if (indexes.hasOwnProperty(index)) {
+      concatIndexData[index] = sortIndex(concatIndexData[index], index)
     }
   }
   // await Promise.all(csvPaths.flatMap(async (csvPath) => {

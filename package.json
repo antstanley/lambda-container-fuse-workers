@@ -7,6 +7,7 @@
   "author": "Ant Stanley",
   "license": "MIT",
   "dependencies": {
+    "JSONStream": "^1.3.5",
     "csv-parser": "^3.0.0"
   },
   "scripts": {
